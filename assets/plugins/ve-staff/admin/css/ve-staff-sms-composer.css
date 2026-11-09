@@ -1,0 +1,32 @@
+/* Scoped to the SMS editor; retain native WordPress controls and ACF validation. */
+.ve-sms-composer #poststuff { max-width: 1200px; }
+.ve-sms-composer #post-body.columns-2 { margin-right: 0; }
+.ve-sms-composer #postbox-container-1 { float: none !important; width: 100% !important; margin-right: 0 !important; }
+.ve-sms-composer #title { border-radius: 10px; padding: 12px; height: auto; }
+.ve-sms-composer .postbox { border: 1px solid #dce4ee; border-radius: 14px; box-shadow: 0 4px 18px #14283f08; overflow: hidden; }
+.ve-sms-composer .acf-fields > .acf-field { padding: 24px; }
+.ve-sms-composer .acf-tab-wrap { background: #f3f6fb; }
+.ve-sms-composer .acf-tab-group { display: flex; padding: 12px !important; gap: 8px; border: 0 !important; }
+.ve-sms-composer .acf-tab-group li { flex: 1; margin: 0 !important; }
+.ve-sms-composer .acf-tab-group li a { border: 0 !important; border-radius: 8px; padding: 14px !important; background: transparent; }
+.ve-sms-composer .acf-tab-group li.active a { background: #174b83 !important; color: white !important; }
+.ve-sms-composer textarea, .ve-sms-composer select, .ve-sms-composer input[type=text] { border-radius: 8px; }
+.ve-sms-composer .select2-container .select2-selection--multiple { border: 1px solid #9baabd; border-radius: 10px; min-height: 48px; padding: 5px; }
+.ve-sms-composer .select2-container--default .select2-selection--multiple .select2-selection__choice { border: 1px solid #c7d8eb; border-radius: 18px; background: #edf4fc; color: #173f6c; padding: 4px 10px; position: relative; white-space: normal; }
+.ve-sms-composer .select2-container--default .select2-selection--multiple .select2-selection__choice__display { padding-left: 15px; }
+.ve-sms-composer .select2-selection__choice__remove { margin-right: 8px; }
+.ve-sms-composer .ve-sms-count { font-weight: 600; color: #174b83; }
+.ve-sms-filter-action { margin-top: 16px; }
+.ve-sms-import { margin-top: 24px; padding: 20px; border: 1px solid #dce4ee; border-radius: 12px; background: #f7f9fc; }
+.ve-sms-import summary { cursor: pointer; font-weight: 600; }
+.ve-sms-import label { display: block; margin: 16px 0 8px; font-weight: 600; }
+.ve-sms-import textarea { width: 100%; margin-bottom: 12px; }
+.ve-sms-navigation { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-top: 1px solid #dce4ee; }
+.ve-sms-preview { margin-top: 20px; padding: 20px; background: #f3f6fb; border-radius: 12px; }
+.ve-sms-preview > span { font-size: 11px; letter-spacing: .1em; color: #52657b; }
+.ve-sms-preview p { background: #174b83; color: white; padding: 16px; border-radius: 16px 16px 16px 4px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 480px; }
+.ve-sms-preview small { color: #52657b; }
+@media (max-width: 600px) {
+ .ve-sms-composer .acf-fields > .acf-field { padding: 16px; }
+ .ve-sms-composer .acf-tab-group li a { padding: 10px 6px !important; font-size: 12px; }
+}
