@@ -61,9 +61,10 @@ add_filter( 'acf/load_fields', static function ( $fields, $parent ) {
 		if ( $field['key'] === 'field_63bf17a7c4e4f' ) { $section = 'recipients'; $field['label'] = '2. Recipients'; $field['endpoint'] = 0; }
 		if ( $field['name'] === 'scheduled_message' ) { $schedule[] = $field; continue; }
 		if ( $field['type'] === 'acfe_column' || in_array( $field['name'], array( 'sms_recipients', 'sms_recipients_number' ), true ) ) continue;
-		if ( $field['key'] === 'field_6570b12c69c6c' ) $field['message'] = 'Choose locations and departments, then replace the recipient list with matching staff. You can remove names or add individual staff afterward. Filters do not change the list until you apply them.';
+		if ( $field['key'] === 'field_6570b12c69c6c' ) $field['message'] = 'Choose locations and departments, or choose All to include every permitted location or department. Review the matching staff below, then set your recipients. Changing filters does not change your selected recipients.';
 		if ( $section === 'compose' ) $compose[] = $field; else $recipients[] = $field;
 	}
+	$recipients[] = array( 'key' => 'field_ve_sms_filter_preview', 'name' => 've_sms_filter_preview', 'label' => 'Staff matching your filters', 'type' => 'message', 'message' => '<div id="ve-sms-filter-preview"></div>', 'esc_html' => 0 );
 	$recipients[] = array( 'key' => 'field_ve_sms_recipient_slot', 'name' => 've_sms_recipient_slot', 'label' => 'Selected recipients', 'type' => 'message', 'message' => '<div id="ve-sms-recipient-slot"></div>', 'esc_html' => 0 );
 	$tab = array( 'key' => 'field_ve_sms_delivery_tab', 'name' => '', 'label' => '3. Delivery', 'type' => 'tab', 'placement' => 'top', 'endpoint' => 0 );
 	return array_merge( $compose, $recipients, array( $tab ), $schedule );

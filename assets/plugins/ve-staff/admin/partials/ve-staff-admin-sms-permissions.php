@@ -102,7 +102,7 @@ function ve_sms_filter_field( array $field ): array {
 	$taxonomy = ( $field['name'] ?? '' ) === 'sms_msg_location' ? 'location' : ( ( $field['name'] ?? '' ) === 'sms_msg_department' ? 'department' : '' );
 	if ( ! $taxonomy ) return $field;
 	$field['allow_terms'] = ve_sms_allowed_terms( get_current_user_id(), $taxonomy ) ?: array( 0 );
-	$field['field_type'] = 'select'; $field['ui'] = 1; $field['multiple'] = 1; $field['allow_null'] = 1; $field['required'] = 0; $field['wrapper']['class'] = ''; $field['placeholder'] = 'Search ' . $taxonomy . 's';
+	$field['field_type'] = 'select'; $field['ui'] = 1; $field['multiple'] = 1; $field['allow_null'] = 1; $field['required'] = 0; $field['wrapper']['class'] = ''; $field['wrapper']['width'] = '50'; $field['placeholder'] = 'Search ' . $taxonomy . 's';
 	return $field;
 }
 add_filter( 'acf/load_field/name=sms_msg_location', 've_sms_filter_field', 20 ); add_filter( 'acf/load_field/name=sms_msg_department', 've_sms_filter_field', 20 );
@@ -116,8 +116,32 @@ function ve_sms_staff_allowed( int $staff_id, int $user_id ): bool {
 	$locations = wp_get_object_terms( $staff_id, 'location', array( 'fields' => 'ids' ) ); $departments = wp_get_object_terms( $staff_id, 'department', array( 'fields' => 'ids' ) );
 	return ! is_wp_error( $locations ) && ! is_wp_error( $departments ) && (bool) array_intersect( $locations, ve_sms_allowed_terms( $user_id, 'location' ) ) && (bool) array_intersect( $departments, ve_sms_allowed_terms( $user_id, 'department' ) );
 }
+/** Expand the explicit All choice only within the author's permitted terms. */
+function ve_sms_resolve_filter_terms( array $values, string $taxonomy, int $user_id ): array {
+	$allowed = ve_sms_allowed_terms( $user_id, $taxonomy );
+	return in_array( '__all', $values, true ) ? $allowed : array_values( array_intersect( array_map( 'absint', $values ), $allowed ) );
+}
+function ve_sms_prepare_filter_choices( array $field ): array {
+	$taxonomy = $field['name'] === 'sms_msg_location' ? 'location' : 'department';
+	$field['choices'] = array( '__all' => $taxonomy === 'location' ? 'All Locations' : 'All Departments' ) + (array) ( $field['choices'] ?? array() );
+	$allowed = ve_sms_allowed_terms( get_current_user_id(), $taxonomy );
+	$selected = array_map( 'absint', (array) ( $field['value'] ?? array() ) );
+	if ( $allowed && ! array_diff( $allowed, $selected ) ) $field['value'] = array( '__all' );
+	return $field;
+}
+function ve_sms_save_filter_choices( $value, $post_id, array $field ): array {
+	return ve_sms_resolve_filter_terms( (array) $value, $field['name'] === 'sms_msg_location' ? 'location' : 'department', get_current_user_id() );
+}
+foreach ( array( 'sms_msg_location', 'sms_msg_department' ) as $filter_name ) {
+	add_filter( 'acf/load_field/name=' . $filter_name, 've_sms_prepare_filter_choices', 40 );
+	add_filter( 'acf/prepare_field/name=' . $filter_name, 've_sms_prepare_filter_choices', 30 );
+}
+// Expand before ACF dispatches type-specific handlers that can save taxonomy terms.
+add_filter( 'acf/update_value', static function ( $value, $post_id, $field ) {
+	return in_array( $field['name'] ?? '', array( 'sms_msg_location', 'sms_msg_department' ), true ) ? ve_sms_save_filter_choices( $value, $post_id, $field ) : $value;
+}, 5, 3 );
 function ve_sms_filtered_ids( array $locations, array $departments, int $user_id ): array {
-	$locations = array_intersect( array_map( 'absint', $locations ), ve_sms_allowed_terms( $user_id, 'location' ) ); $departments = array_intersect( array_map( 'absint', $departments ), ve_sms_allowed_terms( $user_id, 'department' ) );
+	$locations = ve_sms_resolve_filter_terms( $locations, 'location', $user_id ); $departments = ve_sms_resolve_filter_terms( $departments, 'department', $user_id );
 	if ( ! $locations || ! $departments ) return array();
 	return array_map( 'absint', get_posts( array( 'post_type' => 'staff', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids', 'tax_query' => array( 'relation' => 'AND', array( 'taxonomy' => 'location', 'field' => 'term_id', 'terms' => $locations ), array( 'taxonomy' => 'department', 'field' => 'term_id', 'terms' => $departments ) ), 'meta_query' => array( array( 'key' => 'office_contact_info_office_sms_status', 'value' => 1 ), array( 'key' => 'office_contact_info_office_cell_phone', 'value' => '', 'compare' => '!=' ) ) ) ) );
 }
@@ -139,7 +163,7 @@ function ve_sms_recipient_select( array $ids, string $name, string $id ): string
 }
 function ve_sms_recipients_box( WP_Post $post ): void {
 	wp_nonce_field( 've_sms_recipients', 've_sms_recipients_nonce' );
-	echo '<button type="button" class="button ve-sms-load-recipients" data-recipient-target="#ve-sms-recipients">Replace list with matching staff</button><p>';
+	echo '<button type="button" class="button ve-sms-load-recipients" data-recipient-target="#ve-sms-recipients">Set recipients from Filters</button><p>';
 	echo ve_sms_recipient_select( ve_sms_effective_ids( $post->ID ), VE_SMS_RECIPIENTS, 've-sms-recipients' );
 	echo '</p><p class="description">Load the permitted filters, then remove or search for individual staff.</p>';
 	echo '<p><label for="ve-sms-save-recipient-group"><strong>Save as Recipient Group</strong></label><br><input class="widefat" id="ve-sms-save-recipient-group" name="ve_sms_new_recipient_group" type="text" value="" placeholder="Recipient group name"></p>';
