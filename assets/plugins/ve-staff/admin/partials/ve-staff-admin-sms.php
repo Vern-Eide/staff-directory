@@ -87,7 +87,7 @@ class Ve_Staff_SMS {
 		
 		// Staff SMS MSG Post Actions
 		add_action( 'acf/save_post', array( $this, 'new_sms_msg_post' ), 20);
-		add_action( 'save_post', array( $this, 'sms_msg_post_scheduled_check' ), 10, 1 );
+		add_action( 'acf/save_post', array( $this, 'sms_msg_post_scheduled_check' ), 15, 1 );
 		add_action( 'load-edit.php', array( $this, 'update_custom_meta_on_posts_table_load' ) );
 		// OLD REMOVED 10/01/2025 add_action( 'future_to_publish', array( $this, 'send_scheduled_sms_msg' ), 10, 3);
 		add_action( 'future_to_publish',   array( $this, 'send_scheduled_sms_msg' ), 10, 1 );
@@ -106,7 +106,7 @@ class Ve_Staff_SMS {
 	}
 	
 	public function ve_sms_enqueue_scripts() {
-	   wp_register_script( "ve_sms_admin_ajax_script", VE_STAFF_PLUGIN_URL.'admin/js/ve-staff-sms-admin.js', array('jquery') );
+	   wp_register_script( "ve_sms_admin_ajax_script", VE_STAFF_PLUGIN_URL.'admin/js/ve-staff-sms-admin.js', array('jquery'), filemtime( plugin_dir_path(__FILE__) . '../js/ve-staff-sms-admin.js' ) );
 	   wp_localize_script('ve_sms_admin_ajax_script', 'veAjax', array(
 			'nonce' => wp_create_nonce('ajax-nonce'),
 			'ajaxurl' => admin_url('admin-ajax.php'),
@@ -989,14 +989,14 @@ class Ve_Staff_SMS {
 			$scheduled_date = get_field( 'scheduled_message_sms_msg_scheduled_date', $post_id );
 
 			// Check if the scheduled date is not empty
-			if ( ! empty( $scheduled_date ) ) {
+			if ( ! empty( $scheduled_date ) && in_array( $post_status, array( 'publish', 'future' ), true ) ) {
 				$scheduled_timestamp = strtotime( $scheduled_date );
 				$current_timestamp   = current_time( 'timestamp' );
 				$time_diff           = $scheduled_timestamp - $current_timestamp;
 				$time_in_future      = $time_diff > 0;
 
 				// Check if the scheduled date is in the future and the post status is not already 'future'
-				if ( $time_in_future && get_post_status( $post_id ) !== 'future' ) {
+				if ( $time_in_future && ( get_post_status( $post_id ) !== 'future' || get_post_field( 'post_date', $post_id ) !== date( 'Y-m-d H:i:s', $scheduled_timestamp ) ) ) {
 					// Set the post status to 'future' and schedule the post
 					wp_update_post( array(
 						'ID'            => $post_id,
@@ -1106,7 +1106,7 @@ class Ve_Staff_SMS {
 
 			// --- Handle scheduled vs immediate ---
 			$scheduled_date = get_field('scheduled_message_sms_msg_scheduled_date', $post_id);
-			if (!empty($scheduled_date) && strtotime($scheduled_date) > current_time('timestamp')) {
+			if (in_array($post_status, array('publish', 'future'), true) && !empty($scheduled_date) && strtotime($scheduled_date) > current_time('timestamp')) {
 				// Mark as scheduled
 				update_post_meta($post_id, 'staff_sms_msg_scheduled', 1);
 				update_post_meta($post_id, 'staff_sms_msg_scheduled_datetime', $scheduled_date);
