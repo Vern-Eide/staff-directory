@@ -47,7 +47,7 @@ jQuery(function ($) {
 		$select.trigger('change'); return added;
 	}
 	var $status = $('<p class="ve-sms-status" role="status" aria-live="polite"></p>');
-	$('.ve-sms-load-recipients').on('click', function () {
+	$('.ve-sms-load-recipients').filter(function () { return $(this).data('recipient-target') !== '#ve-sms-recipients'; }).on('click', function () {
 		var $button = $(this), $select = $($button.data('recipient-target'));
 		function values(name) {
 			var $group = $('.ve-sms-group-filter[data-filter="' + name + '"]');
@@ -73,7 +73,61 @@ jQuery(function ($) {
 	var $box = $('#ve-sms-recipients-box'), $select = $('#ve-sms-recipients');
 	$slot.append($box.find('.inside').children()); $box.remove();
 	var $load = $slot.find('.ve-sms-load-recipients');
-	$('[data-name="sms_msg_department"] .acf-input').append($('<div class="ve-sms-filter-action"></div>').append($load));
+	var $filters = $('[data-name="sms_msg_location"] select, [data-name="sms_msg_department"] select');
+	var $matches = $('#ve-sms-filter-preview');
+	var $matchStatus = $('<p class="ve-sms-match-status" role="status" aria-live="polite"></p>').appendTo($matches);
+	var $matchList = $('<ul class="ve-sms-match-list" aria-label="Staff matching your filters"></ul>').appendTo($matches);
+	$matches.append('<p class="description">Preview only. Setting recipients replaces your current list with these staff. You can then add or remove names below.</p>');
+	var $action = $('<div class="ve-sms-filter-action"></div>').appendTo($matches);
+	$load.text('Set recipients from Filters').prop('disabled', true).appendTo($action);
+	var $retry = $('<button type="button" class="button ve-sms-retry-preview">Retry preview</button>').hide().appendTo($action);
+	var matches = null, request = null, timer = null, revision = 0, normalizing = false;
+	function filterValues(name) { return $('[data-name="sms_msg_' + name + '"] select').val() || []; }
+	function refreshMatches() {
+		var currentRevision = ++revision;
+		clearTimeout(timer);
+		if (request) { request.abort(); request = null; }
+		matches = null; $load.prop('disabled', true); $retry.hide(); $matchList.empty();
+		var locations = filterValues('location'), departments = filterValues('department');
+		if (!locations.length || !departments.length) {
+			$matches.attr('aria-busy', 'false');
+			$matchStatus.text('Choose a location and department (or All) to preview matching staff.'); return;
+		}
+		$matches.attr('aria-busy', 'true'); $matchStatus.text('Finding matching staff…');
+		timer = setTimeout(function () {
+			request = $.post(veAjax.ajaxurl, {action: 've_sms_load_recipients', nonce: veAjax.nonce, locations: locations, departments: departments})
+				.done(function (response) {
+					if (currentRevision !== revision) return;
+					if (!response.success || !Array.isArray(response.data)) {
+						$matchStatus.text('Unable to preview staff. Your selected recipients have not changed.'); $retry.show(); return;
+					}
+					matches = response.data.slice().sort(function (a, b) { return nameOnly(a.text).localeCompare(nameOnly(b.text)); });
+					matches.forEach(function (row) { $('<li class="ve-sms-match-pill"></li>').text(nameOnly(row.text)).appendTo($matchList); });
+					$matchStatus.text(matches.length ? matches.length + ' staff match your filters. Review the names before setting recipients.' : 'No eligible staff match these filters. Your selected recipients have not changed.');
+					$load.prop('disabled', matches.length === 0);
+				}).fail(function (xhr, status) {
+					if (currentRevision !== revision || status === 'abort') return;
+					$matchStatus.text('Unable to preview staff. Your selected recipients have not changed.'); $retry.show();
+				}).always(function () { if (currentRevision === revision) { request = null; $matches.attr('aria-busy', 'false'); } });
+		}, 250);
+	}
+	$filters.each(function () { $(this).data('ve-sms-previous', $(this).val() || []); });
+	$filters.on('change.veSmsPreview', function () {
+		if (normalizing) return;
+		var $filter = $(this), values = $filter.val() || [], previous = $filter.data('ve-sms-previous') || [];
+		if (values.length > 1 && values.indexOf('__all') !== -1) {
+			values = previous.indexOf('__all') === -1 ? ['__all'] : values.filter(function (value) { return value !== '__all'; });
+			normalizing = true; $filter.val(values).trigger('change.select2'); normalizing = false;
+		}
+		$filter.data('ve-sms-previous', values.slice()); refreshMatches();
+	});
+	$retry.on('click', refreshMatches);
+	$load.on('click', function () {
+		if (!matches || !matches.length || $load.prop('disabled')) return;
+		addRecipients($select, matches, true);
+		$matchStatus.text(matches.length + ' recipients set from your filters. You can now add or remove names below.');
+	});
+	refreshMatches();
 	$slot.find('p.description').text('Only the names selected here will receive this message. Search to add staff, or use × to remove a person.');
 	$select.attr('aria-label', 'Selected recipients');
 	var $count = $('<p class="ve-sms-count" role="status"></p>').prependTo($slot);

@@ -4,8 +4,9 @@ $hooks = array();
 function add_action(...$args) {}
 function add_filter($name, $callback, ...$args) { global $hooks; $hooks[$name] = $callback; }
 function absint($v) { return abs((int)$v); }
-function user_can(...$args) { return true; }
-function get_user_meta(...$args) { return array(1); }
+function user_can(...$args) { return $args[0] !== 2; }
+function get_user_meta(...$args) { return $args[0] === 2 ? array() : array(1); }
+function get_current_user_id() { return 1; }
 function is_wp_error($v) { return false; }
 function wp_get_object_terms(...$args) { return array(1); }
 function get_posts(...$args) { return array(1,2,3,4,5); }
@@ -40,4 +41,17 @@ expect($hooks['acf/update_value/key=field_63bf16f7ee103']('2030-01-01 12:00:00')
 $_POST['acf']['field_63bf1a8ae121e']['field_63bf16abee102'] = 1;
 expect($hooks['acf/validate_value/key=field_63bf16f7ee103'](true, '2000-01-01 12:00:00') !== true, 'Past date rejected');
 expect($hooks['acf/validate_value/key=field_63bf16f7ee103'](true, '2099-01-01 12:00:00') === true, 'Future date accepted');
-echo "SMS recipient and scheduling checks passed\n";
+expect(ve_sms_resolve_filter_terms(array('__all'), 'department', 1) === array(1), 'All expands only permitted terms');
+expect(ve_sms_resolve_filter_terms(array('__all', '999'), 'location', 1) === array(1), 'All cannot add forbidden terms');
+expect(ve_sms_resolve_filter_terms(array('999'), 'location', 1) === array(), 'Unauthorized explicit term excluded');
+expect(ve_sms_resolve_filter_terms(array('__all'), 'department', 2) === array(), 'All with no permission stays empty');
+expect(ve_sms_resolve_filter_terms(array(), 'department', 1) === array(), 'Empty does not implicitly mean All');
+expect(ve_sms_save_filter_choices(array('__all'), 99, array('name'=>'sms_msg_department')) === array(1), 'Save expands All to real IDs');
+$field = ve_sms_prepare_filter_choices(array('name'=>'sms_msg_department', 'choices'=>array(1=>'Sales'), 'value'=>array(1)));
+expect($field['choices']['__all'] === 'All Departments' && $field['value'] === array('__all'), 'All choice round trip');
+$definition = json_decode(file_get_contents(__DIR__ . '/../assets/themes/vern-eide-staff/inc/assets/acf/json/group_63bf0f991067a.json'), true);
+$fields = $hooks['acf/load_fields']($definition['fields'], $definition);
+$names = array_column($fields, 'name');
+expect(array_search('sms_msg_department', $names) < array_search('ve_sms_filter_preview', $names), 'Preview follows both filters');
+expect(array_search('ve_sms_filter_preview', $names) < array_search('ve_sms_recipient_slot', $names), 'Preview precedes selected recipients');
+echo "SMS recipient, All permissions, field layout and scheduling checks passed\n";
