@@ -177,8 +177,6 @@
     paths.chevron = ['448 512', 'M207 381 13 187a24 24 0 0 1 34-34l177 177 177-177a24 24 0 0 1 34 34L241 381a24 24 0 0 1-34 0z'];
     paths.briefcase = ['512 512', 'M184 48h144a40 40 0 0 1 40 40v40h96a48 48 0 0 1 48 48v240a48 48 0 0 1-48 48H48a48 48 0 0 1-48-48V176a48 48 0 0 1 48-48h96V88a40 40 0 0 1 40-40zm8 80h128V96H192z'];
     paths.building = ['448 512', 'M64 32h320v448H64zM112 80v48h48V80zm88 0v48h48V80zm88 0v48h48V80zM112 176v48h48v-48zm88 0v48h48v-48zm88 0v48h48v-48zM112 272v48h48v-48zm88 0v48h48v-48zm88 0v48h48v-48zM192 384v96h64v-96z'];
-    paths.calendar = ['448 512', 'M96 0h32v64h192V0h32v64h48a48 48 0 0 1 48 48v352a48 48 0 0 1-48 48H48a48 48 0 0 1-48-48V112a48 48 0 0 1 48-48h48V0zM32 192v272a16 16 0 0 0 16 16h352a16 16 0 0 0 16-16V192H32z'];
-    paths.person = ['448 512', 'M224 256a128 128 0 1 0 0-256 128 128 0 0 0 0 256zM48 512a48 48 0 0 1-48-48v-16a160 160 0 0 1 160-160h128a160 160 0 0 1 160 160v16a48 48 0 0 1-48 48H48z'];
     var definition = paths[kind] || paths.phone;
     var icon = document.createElement('span'); icon.className = 've-detail-icon fa-solid'; icon.setAttribute('aria-hidden', 'true');
     icon.innerHTML = '<svg viewBox="0 0 ' + definition[0] + '" focusable="false"><path fill="currentColor" d="' + definition[1] + '"></path></svg>';
@@ -246,22 +244,6 @@
       var actions = all(contact, ':scope > .ve-contact-info-btn');
       if (actions.length) { var group = document.createElement('div'); group.className = 've-contact-actions'; actions[0].before(group); actions.forEach(function (item) { group.appendChild(item); }); }
     }
-    var publicContact = card.querySelector('.employee-wrapper > .ve-contact-wrap');
-    if (publicContact) publicContact.classList.add('ve-public-actions');
-    var seenPhones = [];
-    all(card, '.ve-public-actions a[href^="tel:"], .ve-public-actions a[href^="sms:"], .appointment, button[data-bs-target^="#biomodal"], button[data-target^="#biomodal"]').forEach(function (button) {
-      var href = button.getAttribute('href') || '';
-      var kind = href.indexOf('tel:') === 0 ? 'phone' : href.indexOf('sms:') === 0 ? 'email' : button.classList.contains('appointment') ? 'calendar' : 'person';
-      var label = kind === 'phone' ? 'Call' : kind === 'email' ? 'Text' : kind === 'calendar' ? 'Book appointment' : 'View bio';
-      if (kind === 'phone') { if (seenPhones.indexOf(href) !== -1) button.classList.add('ve-duplicate-call'); seenPhones.push(href); }
-      var text = document.createElement('span'); text.className = 've-public-action-text';
-      while (button.firstChild) text.appendChild(button.firstChild);
-      button.appendChild(text);
-      var glyph = detailIcon(kind); glyph.classList.add('ve-public-action-icon'); button.appendChild(glyph);
-      button.classList.add('ve-public-action');
-      button.setAttribute('aria-label', label + (name ? ' — ' + name.textContent.trim() : ''));
-      button.title = label;
-    });
     var image = card.querySelector('.employee-tile-img img');
     if (image) {
       var host = image.parentElement; host.tabIndex = 0; host.setAttribute('aria-label', 'Enlarge ' + (name ? name.textContent.trim() : 'staff') + ' photo');

@@ -3,7 +3,7 @@
   "solution": {
     "name": "eide-web-staff-integration-client-side-solution",
     "id": "749a8674-74dd-40c4-88c7-98475ee5690d",
-    "version": "2.5.4.0",
+    "version": "2.5.2.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
