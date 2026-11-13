@@ -48,6 +48,11 @@ jobs:
           google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer --print-to-pdf=/tmp/ve-print-check/portrait.pdf file:///tmp/ve-print-check/portrait.html
           google-chrome --headless --no-sandbox --disable-gpu --no-pdf-header-footer --print-to-pdf=/tmp/ve-print-check/landscape.pdf file:///tmp/ve-print-check/landscape.html
           python3 tests/verify-print.py
+      - name: Verify compact card spacing in Chromium
+        run: |
+          node tests/compact-layout.cjs
+          google-chrome --headless --no-sandbox --disable-gpu --window-size=1600,900 --dump-dom file:///tmp/ve-layout-check/compact.html > /tmp/ve-layout-check/result.html
+          python3 -c 'from pathlib import Path; s=Path("/tmp/ve-layout-check/result.html").read_text(); assert "data-layout-check=\"passed\"" in s, s[-1500:]'
       - run: npm run package
       - name: Verify generated SharePoint package
         id: verify

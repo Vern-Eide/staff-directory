@@ -604,7 +604,7 @@
     max-width: var(--ve-staff-card-width);
   }
 
-  @container ve-staff-cards (min-width: 576px) {
+  @container ve-staff-cards (min-width: 360px) {
     #veStaffList .employee-list .employee-tile { --ve-staff-card-width: 50%; }
   }
   @container ve-staff-cards (min-width: 768px) {

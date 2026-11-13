@@ -341,3 +341,16 @@ test('Save PDF controls exist only in the SharePoint runtime, not site or embed 
     runtime.dispose(window.document);window.close();
   }
 });
+
+test('compact public actions retain destinations and biography targets with accessible icons', () => {
+  const dom=new JSDOM('<div id="veStaffList"><div class="employee-tile"><div class="employee-wrapper"><div class="employee-details"><h3 class="employee-name">Alice</h3></div><div class="ve-contact-wrap"><div><a href="tel:6055551234">Call</a></div><div><a href="tel:6055551234">605-555-1234</a></div><div><a class="appointment" href="https://example.com/book">Book Appointment</a></div><div><button data-bs-target="#biomodal42" data-bs-toggle="vemodal">About Alice</button></div></div></div></div></div>');
+  const {window}=dom;const {createDirectoryRuntime}=load('src/runtime/directory.ts',{window,document:window.document,MutationObserver:window.MutationObserver});const runtime=createDirectoryRuntime();runtime.initialize(window.document);
+  const card=window.document.querySelector('.employee-tile');
+  assert.equal(card.querySelectorAll('.ve-public-action-icon svg').length,4);
+  assert.equal(card.querySelectorAll('.ve-duplicate-call').length,1);
+  assert.equal(card.querySelector('.appointment').getAttribute('href'),'https://example.com/book');
+  assert.equal(card.querySelector('[data-bs-target]').getAttribute('data-bs-target'),'#biomodal42');
+  assert.equal(card.querySelector('[data-bs-target]').getAttribute('aria-label'),'View bio — Alice');
+  assert.equal(card.querySelector('.appointment .ve-public-action-text').textContent,'Book Appointment');
+  runtime.dispose(window.document);window.close();
+});
