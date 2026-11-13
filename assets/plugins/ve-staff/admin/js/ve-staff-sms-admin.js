@@ -157,13 +157,16 @@ jQuery(function ($) {
 	}
 	var $navigation = $('<div class="ve-sms-navigation"><button type="button" class="button ve-sms-back">Back</button><span class="ve-sms-step-label"></span><button type="button" class="button button-primary ve-sms-next">Continue</button></div>').appendTo($group.find('> .inside'));
 	var $delivery = $('[data-name="scheduled_message"] .acf-input');
-	var $publishBox = $('#postbox-container-1 #submitdiv').first();
-	if (!$publishBox.length) $publishBox = $('#submitdiv').first();
-	if ($delivery.length && $publishBox.length) {
+	var publishBox = document.querySelector('#postbox-container-1 [id="submitdiv"]') || document.querySelector('#poststuff [id="submitdiv"]');
+	if ($delivery.length && publishBox) {
 		var $publishActions = $('<div class="ve-sms-publish-actions"></div>');
-		$publishActions.append($publishBox.find('#minor-publishing-actions').first(), $publishBox.find('#major-publishing-actions').first());
+		['minor-publishing-actions', 'major-publishing-actions'].forEach(function (id) {
+			var rows = document.querySelectorAll('#poststuff [id="' + id + '"]');
+			if (rows.length) $publishActions.append(rows[0]);
+			for (var i = 1; i < rows.length; i++) rows[i].remove();
+		});
 		$delivery.append($publishActions);
-		$('.ve-sms-composer #submitdiv').hide();
+		document.querySelectorAll('#poststuff [id="submitdiv"]').forEach(function (box) { $(box).hide(); });
 	}
 	function tabs() { return $group.find('.acf-tab-wrap .acf-tab-button'); }
 	function current() { return tabs().index(tabs().filter(function () { return $(this).parent().hasClass('active'); })); }
