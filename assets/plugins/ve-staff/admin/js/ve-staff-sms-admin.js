@@ -157,8 +157,14 @@ jQuery(function ($) {
 	}
 	var $navigation = $('<div class="ve-sms-navigation"><button type="button" class="button ve-sms-back">Back</button><span class="ve-sms-step-label"></span><button type="button" class="button button-primary ve-sms-next">Continue</button></div>').appendTo($group.find('> .inside'));
 	var $delivery = $('[data-name="scheduled_message"] .acf-input');
-	var $publishBox = $('#submitdiv');
-	if ($delivery.length && $publishBox.length) $publishBox.appendTo($delivery).addClass('ve-sms-publish-actions');
+	var $publishBox = $('#postbox-container-1 #submitdiv').first();
+	if (!$publishBox.length) $publishBox = $('#submitdiv').first();
+	if ($delivery.length && $publishBox.length) {
+		var $publishActions = $('<div class="ve-sms-publish-actions"></div>');
+		$publishActions.append($publishBox.find('#minor-publishing-actions').first(), $publishBox.find('#major-publishing-actions').first());
+		$delivery.append($publishActions);
+		$('.ve-sms-composer #submitdiv').hide();
+	}
 	function tabs() { return $group.find('.acf-tab-wrap .acf-tab-button'); }
 	function current() { return tabs().index(tabs().filter(function () { return $(this).parent().hasClass('active'); })); }
 	function updateStep() {
@@ -166,7 +172,7 @@ jQuery(function ($) {
 		$navigation.find('.ve-sms-back').prop('disabled', index <= 0);
 		$navigation.find('.ve-sms-next').toggle(index < 2);
 		$navigation.find('.ve-sms-step-label').text('Step ' + (index + 1) + ' of 3');
-		$publishBox.toggle(index === 2);
+		$publishActions && $publishActions.toggle(index === 2);
 	}
 	$navigation.on('click', 'button', function () { var index = current() + ($(this).hasClass('ve-sms-next') ? 1 : -1); tabs().eq(index).trigger('click').trigger('focus'); updateStep(); });
 	$group.on('click', '.acf-tab-button', function () { setTimeout(updateStep, 0); });

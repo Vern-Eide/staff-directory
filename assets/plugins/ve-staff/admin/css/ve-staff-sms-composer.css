@@ -40,11 +40,13 @@
 .ve-sms-navigation .ve-sms-back { justify-self: start; }
 .ve-sms-navigation .ve-sms-next { justify-self: end; }
 .ve-sms-step-label { white-space: nowrap; }
-.ve-sms-publish-actions { display: block; float: none; width: 100%; margin: 20px 0 0; border: 0; box-shadow: none; background: transparent; }
-.ve-sms-publish-actions > .postbox-header { display: none; }
-.ve-sms-publish-actions > .inside { margin: 0; padding: 0; }
-.ve-sms-publish-actions #major-publishing-actions { border: 0; padding: 0; background: transparent; }
-.ve-sms-publish-actions #publishing-action { float: right; }
+.ve-sms-publish-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; margin: 20px 0 0; padding: 16px; box-sizing: border-box; border: 1px solid #dce4ee; border-radius: 10px; background: #f7f9fc; }
+.ve-sms-publish-actions #minor-publishing-actions,
+.ve-sms-publish-actions #major-publishing-actions { float: none; display: flex; align-items: center; gap: 12px; margin: 0; padding: 0; border: 0; background: transparent; }
+.ve-sms-publish-actions #major-publishing-actions { justify-content: flex-end; flex: 1; }
+.ve-sms-publish-actions #delete-action { display: none; }
+.ve-sms-publish-actions #publishing-action { float: none; }
+.ve-sms-publish-actions #publishing-action .spinner { float: none; }
 .ve-sms-preview { margin-top: 20px; padding: 20px; background: #f3f6fb; border-radius: 12px; }
 .ve-sms-preview > span { font-size: 11px; letter-spacing: .1em; color: #52657b; }
 .ve-sms-preview p { background: #174b83; color: white; padding: 16px; border-radius: 16px 16px 16px 4px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 480px; }
