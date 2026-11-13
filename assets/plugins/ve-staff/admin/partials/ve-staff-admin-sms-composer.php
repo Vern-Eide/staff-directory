@@ -55,8 +55,15 @@ add_filter( 'acf/load_field_group', static function ( $group ) {
 } );
 add_filter( 'acf/load_fields', static function ( $fields, $parent ) {
 	if ( ( $parent['key'] ?? '' ) !== 'group_63bf0f991067a' ) return $fields;
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	if ( ! $screen || $screen->post_type !== 'staff-sms' ) return $fields;
 	$compose = array(); $recipients = array(); $schedule = array(); $section = 'compose';
 	foreach ( $fields as $field ) {
+		// ACF may apply this filter more than once to the same loaded group.
+		// Remove generated fields and any saved copy of the delivery tab before
+		// rebuilding the composer layout, so there is always exactly one tab.
+		if ( in_array( $field['key'] ?? '', array( 'field_ve_sms_filter_preview', 'field_ve_sms_recipient_slot', 'field_ve_sms_delivery_tab' ), true ) ) continue;
+		if ( ( $field['type'] ?? '' ) === 'tab' && ( $field['label'] ?? '' ) === '3. Delivery' ) continue;
 		if ( $field['key'] === 'field_63bf17cbc4e50' ) { $field['label'] = '1. Compose'; $field['endpoint'] = 0; }
 		if ( $field['key'] === 'field_63bf17a7c4e4f' ) { $section = 'recipients'; $field['label'] = '2. Recipients'; $field['endpoint'] = 0; }
 		if ( $field['name'] === 'scheduled_message' ) { $schedule[] = $field; continue; }
